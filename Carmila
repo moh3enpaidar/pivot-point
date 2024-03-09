@@ -1,0 +1,497 @@
+
+//@version=5
+indicator("Pivot Points Standard", "Pivots CAMERILA", overlay=true, max_lines_count=500, max_labels_count=500)
+
+// --- Inputs --- //
+
+look_back = input.int(title="Number of Pivots Back", defval=1, minval=1, maxval=5000)
+show_labels = input.bool(title="Show Labels", defval=true, inline="labels")
+position_labels = input.string("Left", "", options=["Left", "Right"], inline="labels")
+
+enable_daily_pivots = input.bool(title="Daily Pivots", defval=true, inline="daily")
+daily_pivots_color = input.color(defval=color.red, title="", inline="daily")
+
+enable_weekly_pivots = input.bool(title="Weekly Pivots", defval=true, inline="weekly")
+weekly_pivots_color = input.color(defval=color.green, title="", inline="weekly")
+
+enable_monthly_pivots = input.bool(title="Monthly Pivots", defval=true, inline="monthly")
+monthly_pivots_color = input.color(defval=color.blue, title="", inline="monthly")
+
+enable_yearly_pivots = input.bool(title="Yearly Pivots", defval=true, inline="yearly")
+yearly_pivots_color = input.color(defval=color.silver, title="", inline="yearly")
+
+// --- Arrays --- //
+
+var daily_arr_time = array.new_int()
+var daily_lines = array.new_line()
+var daily_labels = array.new_label()
+var daily_pivot_r3 = array.new_float()
+var daily_pivot_s3 = array.new_float()
+var daily_pivot_r4 = array.new_float()
+var daily_pivot_s4 = array.new_float()
+
+var weekly_arr_time = array.new_int()
+var weekly_lines = array.new_line()
+var weekly_labels = array.new_label()
+var weekly_pivot_r3 = array.new_float()
+var weekly_pivot_s3 = array.new_float()
+var weekly_pivot_r4 = array.new_float()
+var weekly_pivot_s4 = array.new_float()
+
+var monthly_arr_time = array.new_int()
+var monthly_lines = array.new_line()
+var monthly_labels = array.new_label()
+var monthly_pivot_r3 = array.new_float()
+var monthly_pivot_s3 = array.new_float()
+var monthly_pivot_r4 = array.new_float()
+var monthly_pivot_s4 = array.new_float()
+
+var yearly_arr_time = array.new_int()
+var yearly_lines = array.new_line()
+var yearly_labels = array.new_label()
+var yearly_pivot_hlc3 = array.new_float()
+var yearly_pivot_r3 = array.new_float()
+var yearly_pivot_s3 = array.new_float()
+var yearly_pivot_r4 = array.new_float()
+var yearly_pivot_s4 = array.new_float()
+
+// --- Daily pivot vars --- //
+
+daily_pivot_open = float(na)
+daily_pivot_open := nz(daily_pivot_open[1])
+daily_pivot_open_prev = float(na)
+daily_pivot_open_prev := nz(daily_pivot_open_prev[1])
+
+daily_pivot_high = float(na)
+daily_pivot_high := nz(daily_pivot_high[1])
+daily_pivot_high_prev = float(na)
+daily_pivot_high_prev := nz(daily_pivot_high_prev[1])
+
+daily_pivot_low = float(na)
+daily_pivot_low := nz(daily_pivot_low[1])
+daily_pivot_low_prev = float(na)
+daily_pivot_low_prev := nz(daily_pivot_low_prev[1])
+
+daily_pivot_close = float(na)
+daily_pivot_close := nz(daily_pivot_close[1])
+daily_pivot_close_prev = float(na)
+daily_pivot_close_prev := nz(daily_pivot_close_prev[1])
+
+var daily_is_change = false
+var daily_change_time = int(na)
+
+// --- Weekly pivot vars --- //
+
+weekly_pivot_open = float(na)
+weekly_pivot_open := nz(weekly_pivot_open[1])
+weekly_pivot_open_prev = float(na)
+weekly_pivot_open_prev := nz(weekly_pivot_open_prev[1])
+
+weekly_pivot_high = float(na)
+weekly_pivot_high := nz(weekly_pivot_high[1])
+weekly_pivot_high_prev = float(na)
+weekly_pivot_high_prev := nz(weekly_pivot_high_prev[1])
+
+weekly_pivot_low = float(na)
+weekly_pivot_low := nz(weekly_pivot_low[1])
+weekly_pivot_low_prev = float(na)
+weekly_pivot_low_prev := nz(weekly_pivot_low_prev[1])
+
+weekly_pivot_close = float(na)
+weekly_pivot_close := nz(weekly_pivot_close[1])
+weekly_pivot_close_prev = float(na)
+weekly_pivot_close_prev := nz(weekly_pivot_close_prev[1])
+
+var weekly_is_change = false
+var weekly_change_time = int(na)
+
+// --- Monthly pivot vars --- //
+
+monthly_pivot_open = float(na)
+monthly_pivot_open := nz(monthly_pivot_open[1])
+monthly_pivot_open_prev = float(na)
+monthly_pivot_open_prev := nz(monthly_pivot_open_prev[1])
+
+monthly_pivot_high = float(na)
+monthly_pivot_high := nz(monthly_pivot_high[1])
+monthly_pivot_high_prev = float(na)
+monthly_pivot_high_prev := nz(monthly_pivot_high_prev[1])
+
+monthly_pivot_low = float(na)
+monthly_pivot_low := nz(monthly_pivot_low[1])
+monthly_pivot_low_prev = float(na)
+monthly_pivot_low_prev := nz(monthly_pivot_low_prev[1])
+
+monthly_pivot_close = float(na)
+monthly_pivot_close := nz(monthly_pivot_close[1])
+monthly_pivot_close_prev = float(na)
+monthly_pivot_close_prev := nz(monthly_pivot_close_prev[1])
+
+var monthly_is_change = false
+var monthly_change_time = int(na)
+
+// --- Yearly pivot vars --- //
+
+yearly_pivot_open = float(na)
+yearly_pivot_open := nz(yearly_pivot_open[1])
+yearly_pivot_open_prev = float(na)
+yearly_pivot_open_prev := nz(yearly_pivot_open_prev[1])
+
+yearly_pivot_high = float(na)
+yearly_pivot_high := nz(yearly_pivot_high[1])
+yearly_pivot_high_prev = float(na)
+yearly_pivot_high_prev := nz(yearly_pivot_high_prev[1])
+
+yearly_pivot_low = float(na)
+yearly_pivot_low := nz(yearly_pivot_low[1])
+yearly_pivot_low_prev = float(na)
+yearly_pivot_low_prev := nz(yearly_pivot_low_prev[1])
+
+yearly_pivot_close = float(na)
+yearly_pivot_close := nz(yearly_pivot_close[1])
+yearly_pivot_close_prev = float(na)
+yearly_pivot_close_prev := nz(yearly_pivot_close_prev[1])
+
+var yearly_is_change = false
+var yearly_change_time = int(na)
+
+
+// User-defined functions --- //
+
+draw_line(resolution, i, pivot, col) =>
+    if resolution == "D"
+        if array.size(daily_arr_time) > 1
+            array.push(daily_lines, line.new(array.get(daily_arr_time, i), array.get(pivot, i), array.get(daily_arr_time, i + 1), array.get(pivot, i), color=col, xloc=xloc.bar_time))
+            
+    if resolution == "W"
+        if array.size(weekly_arr_time) > 1
+            array.push(weekly_lines, line.new(array.get(weekly_arr_time, i), array.get(pivot, i), array.get(weekly_arr_time, i + 1), array.get(pivot, i), color=col, xloc=xloc.bar_time))
+            
+    if resolution == "M"
+        if array.size(monthly_arr_time) > 1
+            array.push(monthly_lines, line.new(array.get(monthly_arr_time, i), array.get(pivot, i), array.get(monthly_arr_time, i + 1), array.get(pivot, i), color=col, xloc=xloc.bar_time))
+            
+    if resolution == "12M"
+        if array.size(yearly_arr_time) > 1
+            array.push(yearly_lines, line.new(array.get(yearly_arr_time, i), array.get(pivot, i), array.get(yearly_arr_time, i + 1), array.get(pivot, i), color=col, xloc=xloc.bar_time))    
+
+draw_label(resolution, i, y, txt, txt_color) =>
+    if show_labels
+        offset = '‏  ‏  ‏  ‏  ‏ '
+        labels_align_str_left= position_labels == "Left" ? txt + offset : offset + txt
+        
+        if resolution == "D"
+            x = position_labels == "Left" ? array.get(daily_arr_time, i) : array.get(daily_arr_time, i + 1)
+            array.push(daily_labels, label.new(x = x, y=y, text=labels_align_str_left, textcolor=txt_color, style=label.style_label_center, color=#00000000, xloc=xloc.bar_time))
+            
+        if resolution == "W"
+            x = position_labels == "Left" ? array.get(weekly_arr_time, i) : array.get(weekly_arr_time, i + 1)
+            array.push(weekly_labels, label.new(x = x, y=y, text=labels_align_str_left, textcolor=txt_color, style=label.style_label_center, color=#00000000, xloc=xloc.bar_time))
+            
+        if resolution == "M"
+            x = position_labels == "Left" ? array.get(monthly_arr_time, i) : array.get(monthly_arr_time, i + 1)
+            array.push(monthly_labels, label.new(x = x, y=y, text=labels_align_str_left, textcolor=txt_color, style=label.style_label_center, color=#00000000, xloc=xloc.bar_time))
+            
+        if resolution == "12M"
+            x = position_labels == "Left" ? array.get(yearly_arr_time, i) : array.get(yearly_arr_time, i + 1)
+            array.push(yearly_labels, label.new(x = x, y=y, text=labels_align_str_left, textcolor=txt_color, style=label.style_label_center, color=#00000000, xloc=xloc.bar_time))
+
+camarilla(resolution) =>
+    if resolution == "D"
+        daily_hlc3 = (daily_pivot_high_prev + daily_pivot_low_prev + daily_pivot_close_prev) / 3
+        daily_range = daily_pivot_high_prev - daily_pivot_low_prev
+        array.push(daily_pivot_r3, daily_pivot_close_prev + daily_range * 1.1 / 4.0)
+        array.push(daily_pivot_s3, daily_pivot_close_prev - daily_range * 1.1 / 4.0)
+        array.push(daily_pivot_r4, daily_pivot_close_prev + daily_range * 1.1 / 2.0)
+        array.push(daily_pivot_s4, daily_pivot_close_prev - daily_range * 1.1 / 2.0)
+    
+    if resolution == "W"
+        weekly_hlc3 = (weekly_pivot_high_prev + weekly_pivot_low_prev + weekly_pivot_close_prev) / 3
+        weekly_range = weekly_pivot_high_prev - weekly_pivot_low_prev
+        array.push(weekly_pivot_r3, weekly_pivot_close_prev + weekly_range * 1.1 / 4.0)
+        array.push(weekly_pivot_s3, weekly_pivot_close_prev - weekly_range * 1.1 / 4.0)
+        array.push(weekly_pivot_r4, weekly_pivot_close_prev + weekly_range * 1.1 / 2.0)
+        array.push(weekly_pivot_s4, weekly_pivot_close_prev - weekly_range * 1.1 / 2.0)
+    
+    if resolution == "M"
+        monthly_hlc3 = (monthly_pivot_high_prev + monthly_pivot_low_prev + monthly_pivot_close_prev) / 3
+        monthly_range = monthly_pivot_high_prev - monthly_pivot_low_prev
+        array.push(monthly_pivot_r3, monthly_pivot_close_prev + monthly_range * 1.1 / 4.0)
+        array.push(monthly_pivot_s3, monthly_pivot_close_prev - monthly_range * 1.1 / 4.0)
+        array.push(monthly_pivot_r4, monthly_pivot_close_prev + monthly_range * 1.1 / 2.0)
+        array.push(monthly_pivot_s4, monthly_pivot_close_prev - monthly_range * 1.1 / 2.0)
+        
+    if resolution == "12M"
+        yearly_hlc3 = (yearly_pivot_high_prev + yearly_pivot_low_prev + yearly_pivot_close_prev) / 3
+        yearly_range = yearly_pivot_high_prev - yearly_pivot_low_prev
+        array.push(yearly_pivot_r3, yearly_pivot_close_prev + yearly_range * 1.1 / 4.0)
+        array.push(yearly_pivot_s3, yearly_pivot_close_prev - yearly_range * 1.1 / 4.0)
+        array.push(yearly_pivot_r4, yearly_pivot_close_prev + yearly_range * 1.1 / 2.0)
+        array.push(yearly_pivot_s4, yearly_pivot_close_prev - yearly_range * 1.1 / 2.0)    
+
+// --- Logic --- //
+
+[daily_open, daily_high, daily_low, daily_close] = request.security(syminfo.tickerid, "D", [open, high, low, close], lookahead = barmerge.lookahead_on)
+[weekly_open, weekly_high, weekly_low, weekly_close] = request.security(syminfo.tickerid, "W", [open, high, low, close], lookahead = barmerge.lookahead_on)
+[monthly_open, monthly_high, monthly_low, monthly_close] = request.security(syminfo.tickerid, "M", [open, high, low, close], lookahead = barmerge.lookahead_on)
+[yearly_open, yearly_high, yearly_low, yearly_close] = request.security(syminfo.tickerid, "12M", [open, high, low, close], lookahead = barmerge.lookahead_on)
+
+daily_open_gaps_on = request.security(syminfo.tickerid, "D", open, gaps = barmerge.gaps_on, lookahead = barmerge.lookahead_on)
+weekly_open_gaps_on = request.security(syminfo.tickerid, "W", open, gaps = barmerge.gaps_on, lookahead = barmerge.lookahead_on)
+monthly_open_gaps_on = request.security(syminfo.tickerid, "M", open, gaps = barmerge.gaps_on, lookahead = barmerge.lookahead_on)
+yearly_open_gaps_on = request.security(syminfo.tickerid, "12M", open, gaps = barmerge.gaps_on, lookahead = barmerge.lookahead_on)
+
+
+var uses_current_bar = false
+
+
+daily_is_time_change = ta.change(time("D"))
+if daily_is_time_change
+    daily_change_time := time
+
+weekly_is_time_change = ta.change(time("W"))
+if weekly_is_time_change
+    weekly_change_time := time
+    
+monthly_is_time_change = ta.change(time("M"))
+if monthly_is_time_change
+    monthly_change_time := time
+    
+yearly_is_time_change = ta.change(time("12M"))
+if yearly_is_time_change
+    yearly_change_time := time    
+
+
+if (not uses_current_bar and daily_is_time_change) or (uses_current_bar and not na(daily_open_gaps_on))
+    daily_pivot_open_prev := daily_open[1]
+    daily_pivot_high_prev := daily_high[1]
+    daily_pivot_low_prev := daily_low[1]
+    daily_pivot_close_prev := daily_close[1]
+    daily_pivot_open := daily_open
+    daily_pivot_high := daily_high
+    daily_pivot_low := daily_low
+    
+    if barstate.islast and not daily_is_change and  array.size(daily_arr_time) > 0
+        array.set(daily_arr_time, array.size(daily_arr_time) - 1, daily_change_time)
+    else
+        array.push(daily_arr_time, daily_change_time)
+    
+    camarilla("D")
+    
+    if array.size(daily_arr_time) > look_back
+        if array.size(daily_arr_time) > 0
+            array.shift(daily_arr_time)
+            
+        if array.size(daily_pivot_r3) > 0
+            array.shift(daily_pivot_r3)
+        if array.size(daily_pivot_s3) > 0
+            array.shift(daily_pivot_s3)
+        if array.size(daily_pivot_r4) > 0
+            array.shift(daily_pivot_r4)
+        if array.size(daily_pivot_s4) > 0
+            array.shift(daily_pivot_s4)
+    
+    daily_is_change := true
+
+if (not uses_current_bar and weekly_is_time_change) or (uses_current_bar and not na(weekly_open_gaps_on))
+    weekly_pivot_open_prev := weekly_open[1]
+    weekly_pivot_high_prev := weekly_high[1]
+    weekly_pivot_low_prev := weekly_low[1]
+    weekly_pivot_close_prev := weekly_close[1]
+    weekly_pivot_open := weekly_open
+    weekly_pivot_high := weekly_high
+    weekly_pivot_low := weekly_low
+    
+    if barstate.islast and not weekly_is_change and  array.size(weekly_arr_time) > 0
+        array.set(weekly_arr_time, array.size(weekly_arr_time) - 1, weekly_change_time)
+    else
+        array.push(weekly_arr_time, weekly_change_time)
+    
+    camarilla("W")
+    
+    if array.size(weekly_arr_time) > look_back
+        if array.size(weekly_arr_time) > 0
+            array.shift(weekly_arr_time)
+            
+        if array.size(weekly_pivot_r3) > 0
+            array.shift(weekly_pivot_r3)
+        if array.size(weekly_pivot_s3) > 0
+            array.shift(weekly_pivot_s3)
+        if array.size(weekly_pivot_r4) > 0
+            array.shift(weekly_pivot_r4)
+        if array.size(weekly_pivot_s4) > 0
+            array.shift(weekly_pivot_s4)
+    
+    weekly_is_change := true
+
+if (not uses_current_bar and monthly_is_time_change) or (uses_current_bar and not na(monthly_open_gaps_on))
+    monthly_pivot_open_prev := monthly_open[1]
+    monthly_pivot_high_prev := monthly_high[1]
+    monthly_pivot_low_prev := monthly_low[1]
+    monthly_pivot_close_prev := monthly_close[1]
+    monthly_pivot_open := monthly_open
+    monthly_pivot_high := monthly_high
+    monthly_pivot_low := monthly_low
+    
+    if barstate.islast and not monthly_is_change and  array.size(monthly_arr_time) > 0
+        array.set(monthly_arr_time, array.size(monthly_arr_time) - 1, monthly_change_time)
+    else
+        array.push(monthly_arr_time, monthly_change_time)
+
+    camarilla("M")
+
+    if array.size(monthly_arr_time) > look_back
+        if array.size(monthly_arr_time) > 0
+            array.shift(monthly_arr_time)
+            
+   
+        if array.size(monthly_pivot_r3) > 0
+            array.shift(monthly_pivot_r3)
+        if array.size(monthly_pivot_s3) > 0
+            array.shift(monthly_pivot_s3)
+        if array.size(monthly_pivot_r4) > 0
+            array.shift(monthly_pivot_r4)
+        if array.size(monthly_pivot_s4) > 0
+            array.shift(monthly_pivot_s4)
+            
+    monthly_is_change := true        
+
+if (not uses_current_bar and yearly_is_time_change) or (uses_current_bar and not na(yearly_open_gaps_on))
+    yearly_pivot_open_prev := yearly_open[1]
+    yearly_pivot_high_prev := yearly_high[1]
+    yearly_pivot_low_prev := yearly_low[1]
+    yearly_pivot_close_prev := yearly_close[1]
+    yearly_pivot_open := yearly_open
+    yearly_pivot_high := yearly_high
+    yearly_pivot_low := yearly_low
+    
+    if barstate.islast and not yearly_is_change and  array.size(yearly_arr_time) > 0
+        array.set(yearly_arr_time, array.size(yearly_arr_time) - 1, yearly_change_time)
+    else
+        array.push(yearly_arr_time, yearly_change_time)
+
+    camarilla("12M")
+
+    if array.size(yearly_arr_time) > look_back
+        if array.size(yearly_arr_time) > 0
+            array.shift(yearly_arr_time)
+            
+        if array.size(yearly_pivot_hlc3) > 0
+            array.shift(yearly_pivot_hlc3)
+        if array.size(yearly_pivot_r3) > 0
+            array.shift(yearly_pivot_r3)
+        if array.size(yearly_pivot_s3) > 0
+            array.shift(yearly_pivot_s3)
+        if array.size(yearly_pivot_r4) > 0
+            array.shift(yearly_pivot_r4)
+        if array.size(yearly_pivot_s4) > 0
+            array.shift(yearly_pivot_s4)
+            
+    yearly_is_change := true   
+
+
+if barstate.islast and array.size(daily_arr_time) > 0 and daily_is_change
+    daily_is_change := false
+    array.push(daily_arr_time, time_close("D"))
+
+    if enable_daily_pivots
+        for i = 0 to array.size(daily_lines) - 1
+            if array.size(daily_lines) > 0
+                line.delete(array.shift(daily_lines))
+            if array.size(daily_lines) > 0
+                label.delete(array.shift(daily_labels))
+    
+        for i = 0 to array.size(daily_arr_time) - 2
+                   
+            if array.size(daily_pivot_r3) > 0
+                draw_line("D", i, daily_pivot_r3, daily_pivots_color)
+                draw_label("D", i, array.get(daily_pivot_r3, i), "D_R3", daily_pivots_color)
+            if array.size(daily_pivot_s3) > 0
+                draw_line("D", i, daily_pivot_s3, daily_pivots_color)
+                draw_label("D", i, array.get(daily_pivot_s3, i), "D_S3", daily_pivots_color)
+            if array.size(daily_pivot_r4) > 0
+                draw_line("D", i, daily_pivot_r4, daily_pivots_color)
+                draw_label("D", i, array.get(daily_pivot_r4, i), "D_R4", daily_pivots_color)
+            if array.size(daily_pivot_s4) > 0
+                draw_line("D", i, daily_pivot_s4, daily_pivots_color)
+                draw_label("D", i, array.get(daily_pivot_s4, i), "D_S4", daily_pivots_color)
+
+if barstate.islast and array.size(weekly_arr_time) > 0 and weekly_is_change
+    weekly_is_change := false
+    array.push(weekly_arr_time, time_close("W"))
+        
+    if enable_weekly_pivots
+        for i = 0 to array.size(weekly_lines) - 1
+            if array.size(weekly_lines) > 0
+                line.delete(array.shift(weekly_lines))
+            if array.size(weekly_lines) > 0
+                label.delete(array.shift(weekly_labels))
+             
+        for i = 0 to array.size(weekly_arr_time) - 2    
+               
+            if array.size(weekly_pivot_r3) > 0
+                draw_line("W", i, weekly_pivot_r3, weekly_pivots_color)
+                draw_label("W", i, array.get(weekly_pivot_r3, i), "W_R3", weekly_pivots_color)
+            if array.size(weekly_pivot_s3) > 0
+                draw_line("W", i, weekly_pivot_s3, weekly_pivots_color)
+                draw_label("W", i, array.get(weekly_pivot_s3, i), "W_S3", weekly_pivots_color)
+            if array.size(weekly_pivot_r4) > 0
+                draw_line("W", i, weekly_pivot_r4, weekly_pivots_color)
+                draw_label("W", i, array.get(weekly_pivot_r4, i), "W_R4", weekly_pivots_color)
+            if array.size(weekly_pivot_s4) > 0
+                draw_line("W", i, weekly_pivot_s4, weekly_pivots_color)
+                draw_label("W", i, array.get(weekly_pivot_s4, i), "W_S4", weekly_pivots_color)
+                
+if barstate.islast and array.size(monthly_arr_time) > 0 and monthly_is_change
+    monthly_is_change := false
+    array.push(monthly_arr_time, time_close("M"))
+        
+    if enable_monthly_pivots
+        for i = 0 to array.size(monthly_lines) - 1
+            if array.size(monthly_lines) > 0
+                line.delete(array.shift(monthly_lines))
+            if array.size(monthly_lines) > 0
+                label.delete(array.shift(monthly_labels))
+             
+        for i = 0 to array.size(monthly_arr_time) - 2  
+            
+            if array.size(monthly_pivot_r3) > 0
+                draw_line("M", i, monthly_pivot_r3, monthly_pivots_color)
+                draw_label("M", i, array.get(monthly_pivot_r3, i), "M_R3", monthly_pivots_color)
+            if array.size(monthly_pivot_s3) > 0
+                draw_line("M", i, monthly_pivot_s3, monthly_pivots_color)
+                draw_label("M", i, array.get(monthly_pivot_s3, i), "M_S3", monthly_pivots_color)
+            if array.size(monthly_pivot_r4) > 0
+                draw_line("M", i, monthly_pivot_r4, monthly_pivots_color)
+                draw_label("M", i, array.get(monthly_pivot_r4, i), "M_R4", monthly_pivots_color)
+            if array.size(monthly_pivot_s4) > 0
+                draw_line("M", i, monthly_pivot_s4, monthly_pivots_color)
+                draw_label("M", i, array.get(monthly_pivot_s4, i), "M_S4", monthly_pivots_color)
+
+if barstate.islast and array.size(yearly_arr_time) > 0 and yearly_is_change
+    yearly_is_change := false
+    array.push(yearly_arr_time, time_close("12M"))
+        
+    if enable_yearly_pivots
+        for i = 0 to array.size(yearly_lines) - 1
+            if array.size(yearly_lines) > 0
+                line.delete(array.shift(yearly_lines))
+            if array.size(yearly_lines) > 0
+                label.delete(array.shift(yearly_labels))
+             
+        for i = 0 to array.size(yearly_arr_time) - 2  
+            if array.size(yearly_pivot_hlc3) > 0
+                draw_line("12M", i, yearly_pivot_hlc3, yearly_pivots_color)
+                draw_label("12M", i, array.get(yearly_pivot_hlc3, i), "Y_P", yearly_pivots_color)
+            if array.size(yearly_pivot_r3) > 0
+                draw_line("12M", i, yearly_pivot_r3, yearly_pivots_color)
+                draw_label("12M", i, array.get(yearly_pivot_r3, i), "Y_R3", yearly_pivots_color)
+            if array.size(yearly_pivot_s3) > 0
+                draw_line("12M", i, yearly_pivot_s3, yearly_pivots_color)
+                draw_label("12M", i, array.get(yearly_pivot_s3, i), "Y_S3", yearly_pivots_color)
+            if array.size(yearly_pivot_r4) > 0
+                draw_line("12M", i, yearly_pivot_r4, yearly_pivots_color)
+                draw_label("12M", i, array.get(yearly_pivot_r4, i), "Y_R4", yearly_pivots_color)
+            if array.size(yearly_pivot_s4) > 0
+                draw_line("12M", i, yearly_pivot_s4, yearly_pivots_color)
+                draw_label("12M", i, array.get(yearly_pivot_s4, i), "Y_S4", yearly_pivots_color)
